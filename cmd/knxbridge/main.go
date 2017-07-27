@@ -99,7 +99,7 @@ func newBridge(gatewayAddr, otherAddr string) (*bridge, error) {
 
 	if addr.IP.IsMulticast() {
 		// Instantiate routing facilities.
-		router, err := knx.NewRouter(otherAddr, knx.DefaultRouterConfig)
+		router, err := knx.NewRouter(knx.AnyInterface, otherAddr, knx.DefaultRouterConfig)
 		if err != nil {
 			tunnel.Close()
 			return nil, err

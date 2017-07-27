@@ -71,17 +71,30 @@ type RouterSocket struct {
 	inbound <-chan Service
 }
 
+// AnyInterface can be provided as an interface name if you don't want to specific which interface
+// shall be used.
+const AnyInterface string = ""
+
 // ListenRouter creates a new Socket which can be used to exchange KNXnet/IP packets with
 // multiple endpoints.
-func ListenRouter(multicastAddress string) (*RouterSocket, error) {
-	addr, err := net.ResolveUDPAddr("udp4", multicastAddress)
-	if err != nil {
-		return nil, err
+func ListenRouter(interfaceName string, multicastAddr string) (_ *RouterSocket, err error) {
+	var iface *net.Interface
+
+	if interfaceName != AnyInterface {
+		iface, err = net.InterfaceByName(interfaceName)
+		if err != nil {
+			return
+		}
 	}
 
-	conn, err := net.ListenMulticastUDP("udp4", nil, addr)
+	addr, err := net.ResolveUDPAddr("udp4", multicastAddr)
 	if err != nil {
-		return nil, err
+		return
+	}
+
+	conn, err := net.ListenMulticastUDP("udp4", iface, addr)
+	if err != nil {
+		return
 	}
 
 	conn.SetDeadline(time.Time{})
