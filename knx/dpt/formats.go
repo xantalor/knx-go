@@ -28,6 +28,26 @@ func unpackB1(data []byte, b *bool) error {
 	return nil
 }
 
+func packB1U3(c bool, v uint8) []byte {
+	if c {
+		return []byte{(1 << 3) | v}
+	}
+
+	return []byte{(0 << 3) | v}
+
+}
+
+func unpackB1U3(data []byte, c *bool, v *uint8) error {
+	if len(data) != 1 {
+		return ErrInvalidLength
+	}
+
+	*c = (data[0] >> 3) == 1
+	*v = data[0] & 7
+
+	return nil
+}
+
 func packF16(f float32) []byte {
 	buffer := []byte{0, 0, 0}
 
@@ -126,7 +146,7 @@ func unpackV32(data []byte, i *int32) error {
 		return ErrInvalidLength
 	}
 
-	*i = int32(data[1]) << 24 | int32(data[2]) << 16 | int32(data[3]) << 8 | int32(data[4])
+	*i = int32(data[1])<<24 | int32(data[2])<<16 | int32(data[3])<<8 | int32(data[4])
 
 	return nil
 }

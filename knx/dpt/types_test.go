@@ -4,6 +4,7 @@
 package dpt
 
 import (
+	"fmt"
 	"testing"
 
 	"math"
@@ -31,6 +32,18 @@ func get_float_quantization_error(value, resolution float32, mantis int) float32
 
 	// Scale back the quantization error with the given resolution
 	return float32(q) / resolution
+}
+
+func genUint8Slice(start, end, step uint8) []uint8 {
+	if step <= 0 || end < start {
+		return make([]uint8, 0)
+	}
+	s := make([]uint8, 0, (end-start)/step)
+	for start <= end {
+		s = append(s, uint8(start))
+		start += step
+	}
+	return s
 }
 
 // Test DPT 1.001 (Switch) with values within range
@@ -137,6 +150,36 @@ func TestDPT_1010(t *testing.T) {
 		dst.Unpack(buf)
 		if bool(dst) != value {
 			t.Errorf("Wrong value \"%s\" after pack/unpack! Original value was \"%v\".", dst, value)
+		}
+	}
+}
+
+// Test DPT 3.007 (Increase/Decrease by value) with values within range
+func TestDPT_3007(t *testing.T) {
+	var buf []byte
+	var src, dst DPT_3007
+
+	vs := genUint8Slice(0, 7, 1)
+	for _, c := range []bool{true, false} {
+		for _, v := range vs {
+			fmt.Printf("C: %+v; V: %+v\n", c, v)
+			src = DPT_3007{Increase: c, Value: v}
+
+			if src.Increase != c {
+				t.Errorf("Assignment of control value \"%v\" failed! Has value \"%t\".", c, src.Increase)
+			}
+			if src.Value != v {
+				t.Errorf("Assignment of value \"%v\" failed! Has value \"%d\".", v, src.Value)
+			}
+			buf = src.Pack()
+			fmt.Printf("Byte: %+v\n", buf)
+			dst.Unpack(buf)
+			if dst.Increase != c {
+				t.Errorf("Wrong control value \"%t\" after pack/unpack! Original control value was \"%v\".", dst.Increase, c)
+			}
+			if dst.Value != v {
+				t.Errorf("Wrong value \"%v\" after pack/unpack! Original value was \"%d\".", dst.Value, v)
+			}
 		}
 	}
 }
